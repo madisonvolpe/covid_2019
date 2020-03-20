@@ -50,15 +50,31 @@ all_dat <- purrr::map(dat, readr::read_csv) %>% set_names(map_chr(dat, extract_n
     
     ## create more detailed Province, State, City, Indicator
     k <- ex_1 %>%
+      mutate(`Province/State` =ifelse(`Province/State` == "Washington, D.C.", "Washington DC", `Province/State`)) %>%
       mutate(State_Detailed = ifelse(str_detect(`Province/State`, ",") & !is.na(`Province/State`),
                                      gsub(".*,","", `Province/State`), `Province/State`)) %>%
       mutate(City_County = ifelse(str_detect(`Province/State`, ",") & !is.na(`Province/State`),
                                   gsub(",.*$", "",`Province/State`), NA)) ## washington dc case 
     
-    tets <- all_dat %>% 
+    
+    detailed_location <- function(df){
+                    
+                            df_new <- df %>%
+                              mutate(Province_State = ifelse(Province_State == "Washington, D.C.", 
+                                                             "Washington DC", Province_State)) %>%
+                              mutate(State_Detailed = trimws(ifelse(str_detect(Province_State, ",") & !is.na(Province_State),
+                                                             gsub(".*,", "", Province_State), Province_State))) %>%
+                              mutate(City_County = trimws(ifelse(str_detect(Province_State, ",") & !is.na(Province_State),
+                                                          gsub(",.*$", "", Province_State), NA)))
+      
+    }
+    
+    
+   transformed_data <- all_dat %>% 
       map(chg_col_map) %>%
       map(to_date, patrn = "Date") %>%
-      map(remove_patrn, "Country_Region", "\\*")
+      map(remove_patrn, "Country_Region", "\\*") %>%
+      map(detailed_location)
     
    
     
@@ -78,11 +94,4 @@ all_dat <- purrr::map(dat, readr::read_csv) %>% set_names(map_chr(dat, extract_n
     
     
     
-    ### 
-    # l <- map_df(all_dat, function(x) unique(x["Country/Region"]))
-    # 
-    # chk <- l %>% 
-    #   group_by(`Country/Region`) %>%
-    #   summarise(n=n()) %>%
-    #   arrange(`Country/Region`)
-    # 
+  
