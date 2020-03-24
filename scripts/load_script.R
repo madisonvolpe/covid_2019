@@ -86,10 +86,15 @@ con = dbConnect(pg, user = db_user , password = db_password, host = 'localhost',
 dbListTables(con)
 
 #dbWriteTable(con, "confirmed_cases", transformed_data$Confirmed, row.names = FALSE, append = TRUE)
-dbSendQuery(con, query)
-
-
 #dbWriteTable(con, "deaths", transformed_data$Deaths, row.names = FALSE, append = TRUE)
 #dbWriteTable(con, "recovered_cases", transformed_data$Recovered, row.names = FALSE, append = TRUE)
 
-l <- dbGetQuery(con, "SELECT * FROM recovered_cases")
+#dbGetQuery(con, query)
+
+### testinggg
+
+# l <- dbGetQuery(con, 'SELECT "Province_State", "Country_Region", COUNT("Date") 
+#                       FROM confirmed_cases
+#                       GROUP BY "Province_State", "Country_Region"')
+# ex_dat <- filter(l, l$Country_Region == 'Thailand')
+# ex_dat2 <- filter(l, str_detect(l$Province_State,"Santa Clara County"))
