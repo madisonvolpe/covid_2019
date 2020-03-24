@@ -25,19 +25,20 @@ library(RPostgreSQL)
           ## the data from 2019-01-03 should be the only data included!
   
           data_to_insert <- data.frame(province_state = c("New York", "New York", NA, NA),
-                             country_region = c("NY", "NY", "China", "China"),
+                             country_region = c("USA", "USA", "China", "China"),
                              event = c("Confirmed", "Confirmed", "Confirmed", "Confirmed"),
                              date = c("2019-01-02","2019-01-03", "2019-01-02", "2019-01-03"))
 
           ## This code I got from :: https://www.pmg.com/blog/insert-r-data-frame-sql%EF%BB%BF/
-          values <- paste0(apply(data_to_insert, 1, function(x) paste0("('", paste0(x, collapse = "', '"), "')")), 
+                                      
+          values <- paste0(apply(data_to_insert, 1, function(x) paste0("('", paste0(x, collapse = "', '"), "')")),
                            collapse = ", ")
           
           ## first segment we are inserting values collected 
           part_one <- paste0("INSERT INTO cc VALUES ", values)
           
           ## second segment include the conflict 
-          part_two <- ' ON CONFLICT (province_state, country_region, date) DO NOTHING;'
+          part_two <- ' ON CONFLICT (province_state, country_region, event_date) DO NOTHING;'
 
           query <- paste0(part_one, part_two) 
           
