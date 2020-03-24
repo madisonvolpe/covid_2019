@@ -85,8 +85,11 @@ con = dbConnect(pg, user = db_user , password = db_password, host = 'localhost',
 
 dbListTables(con)
 
-dbWriteTable(con, "confirmed_cases", transformed_data$Confirmed, row.names = FALSE, append = TRUE)
-dbWriteTable(con, "deaths", transformed_data$Deaths, row.names = FALSE, append = TRUE)
-dbWriteTable(con, "recovered_cases", transformed_data$Recovered, row.names = FALSE, append = TRUE)
+#dbWriteTable(con, "confirmed_cases", transformed_data$Confirmed, row.names = FALSE, append = TRUE)
+dbSendQuery(con, query)
 
-dbGetQuery(con, "SELECT COUNT(*) FROM confirmed_cases")
+
+#dbWriteTable(con, "deaths", transformed_data$Deaths, row.names = FALSE, append = TRUE)
+#dbWriteTable(con, "recovered_cases", transformed_data$Recovered, row.names = FALSE, append = TRUE)
+
+l <- dbGetQuery(con, "SELECT * FROM recovered_cases")
