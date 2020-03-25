@@ -47,9 +47,55 @@ library(rstudioapi)
     ## prepare data to be written like INSERT statement in SQL
     ## code adapted from https://www.pmg.com/blog/insert-r-data-frame-sql%EF%BB%BF/
     
-    to_insert <- purrr::map(transformed_data, ~paste0(apply(.x, 1, function(x) paste0("('", paste0(x, collapse = "', '"), "')")),
-                                       collapse = ", "))
+    ## must convert NAs in numeric column to NaN first 
+    na_to_null <- function(df, col){
+                df[[col]] <- ifelse(is.na(df[[col]]), "NULL", df[[col]])
+                return(df)
+    }  
     
+    # not_quoted_null <- function(df){
+    #   for(i in 1:nrow(df)){
+    #     for(j in seq_along(df)){
+    #       if(is.element(df[i,j], "NULL")){
+    #         df[i,j] <- df[i,j]
+    #       } else if (is.na(df[i,j])){
+    #         df[i,j] <- paste0("'", df[i,j], "'")
+    #       } else {
+    #         df[i,j] <- df[i,j]
+    #       }
+    #     }
+    #   }
+    #   return(df)
+    # } # not optimized function 
+    
+    # optimized function
+    not_quoted_null <- function(df){
+     
+     df <- df %>%
+        mutate(event_date = as.character(event_date)) %>%
+        mutate_all(., 
+                   list(~case_when(
+                     . == "NULL" ~ "NULL",
+                     is.na(.) ~ paste0("'", NA, "'"),
+                     . != "NULL" & !is.na(.)~ paste0("'", . ,"'")
+      )))
+    
+     return(df)
+    }
+    
+    trans_to_sql <- function(df){
+    
+      trans1 <- not_quoted_null(df)
+      trans2 <- apply(trans1, 1, function(x) paste0(x, collapse = ","))
+      trans3 <- paste0("(", trans2, ")")
+      trans4 <- paste0(trans3, collapse = " ,")
+      
+      return(trans4)
+    }
+    
+    transformed_data <- purrr::map(transformed_data, ~na_to_null(.x, "event_amt"))
+    to_insert <- purrr::map(transformed_data, trans_to_sql)
+ 
     confirmed_query <- paste0("INSERT INTO confirmed VALUES", to_insert$Confirmed, " ON CONFLICT (province_state, country_region, event_date) DO NOTHING;")
     recovered_query <- paste0("INSERT INTO recovered VALUES", to_insert$Recovered, " ON CONFLICT (province_state, country_region, event_date) DO NOTHING;")
     deaths_query <- paste0("INSERT INTO deaths VALUES", to_insert$Deaths, " ON CONFLICT (province_state, country_region, event_date) DO NOTHING;")
