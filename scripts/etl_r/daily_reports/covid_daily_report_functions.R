@@ -8,7 +8,7 @@ library(rvest)
 ## then it extracts the hrefs to all individuals csvs, which then can 
 ## be navigated to, in order to extract data for each day 
 
-get_covid_links <- function(link, x_path){
+get_covid_links <- function(link, x_path, month, year){
   
 links <- link %>%
               read_html() %>%
@@ -17,8 +17,24 @@ links <- link %>%
               keep(~str_detect(.x, ".csv$")) %>%
               paste0("https://github.com", .)
 
-return(links)  
+links <- data.frame(link = links)
+links <- mutate(links, link_date = lubridate::mdy(str_extract(link, "\\d{2}-\\d{2}-\\d{4}")))
 
+if(missing(month) & missing(year)){
+  
+  links <- links
+  
+} else {
+  
+  links <- filter(links, lubridate::month(link_date) == month & lubridate::year(link_date) == year)
+  
+}
+
+if(nrow(links)>0){
+  links
+} else {
+  warning('Please enter valid month and date')
+}
 }
 
 ## Function 2: get_covid_df()
